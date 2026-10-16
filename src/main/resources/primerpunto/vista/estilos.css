@@ -1,0 +1,796 @@
+/*
+ * Estilos de Primer Punto, basados en los prototipos de interfaz de la etapa de diseño:
+ * fondo blanco, verde como color de acento, tarjetas grises redondeadas y tipografía Poppins.
+ */
+
+.root {
+    -verde: #6BBF45;
+    -verde-oscuro: #4E9A2C;
+    -verde-claro: #E8F5E1;
+    -gris-tarjeta: #F4F5F7;
+    -gris-borde: #E4E6EA;
+    -gris-texto: #8E929B;
+    -negro: #1C1C1E;
+    -rojo: #D9534F;
+    -fx-font-family: "Poppins";
+    -fx-font-size: 13px;
+    -fx-background-color: white;
+    -fx-text-fill: -negro;
+}
+
+/* ------------------------------------------------------------ menú lateral */
+
+.sidebar {
+    -fx-background-color: white;
+    -fx-border-color: transparent #E9EAED transparent transparent;
+    -fx-border-width: 0 2 0 0;
+    -fx-padding: 34 24 24 24;
+    -fx-spacing: 6;
+}
+
+.panel-organizador {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 9px;
+    -fx-text-fill: -gris-texto;
+    -fx-padding: 6 0 18 10;
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 30;
+    -fx-text-fill: #5E626B;
+    -fx-font-size: 13px;
+    -fx-alignment: center-left;
+    -fx-padding: 13 20 13 20;
+    -fx-cursor: hand;
+}
+
+.menu-item:hover {
+    -fx-background-color: -gris-tarjeta;
+}
+
+.menu-item-activo,
+.menu-item-activo:hover {
+    -fx-background-color: -verde;
+    -fx-text-fill: white;
+    -fx-font-family: "Poppins SemiBold";
+}
+
+.menu-separador {
+    -fx-background-color: #ECEDF0;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.version {
+    -fx-font-size: 10px;
+    -fx-text-fill: #B5B8BE;
+    -fx-padding: 0 0 0 10;
+}
+
+/* ------------------------------------------------------------ encabezado */
+
+.contenido {
+    -fx-background-color: white;
+    -fx-padding: 40 48 32 48;
+}
+
+.titulo {
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -negro;
+}
+
+.subtitulo {
+    -fx-font-size: 13px;
+    -fx-text-fill: -gris-texto;
+}
+
+.avatar {
+    -fx-fill: -verde-claro;
+}
+
+.saludo {
+    -fx-font-size: 11px;
+    -fx-text-fill: -gris-texto;
+}
+
+.saludo-nombre {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -negro;
+}
+
+/* ------------------------------------------------------------ tarjetas */
+
+.tarjeta {
+    -fx-background-color: -gris-tarjeta;
+    -fx-background-radius: 24;
+    -fx-padding: 28 30 28 30;
+    -fx-spacing: 14;
+}
+
+.tarjeta-verde {
+    -fx-background-color: -verde;
+    -fx-background-radius: 24;
+    -fx-padding: 26 26 26 26;
+    -fx-spacing: 4;
+}
+
+.tarjeta-titulo {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 15px;
+    -fx-text-fill: -negro;
+}
+
+.tarjeta-verde .tarjeta-titulo,
+.tarjeta-verde .dato-grande,
+.tarjeta-verde .dato-medio {
+    -fx-text-fill: white;
+}
+
+.tarjeta-verde .dato-aclaracion {
+    -fx-text-fill: #EAF7E2;
+}
+
+.dato-grande {
+    -fx-font-size: 38px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -negro;
+}
+
+.dato-medio {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -negro;
+}
+
+.dato-aclaracion {
+    -fx-font-size: 11px;
+    -fx-text-fill: -gris-texto;
+}
+
+.separador-tarjeta {
+    -fx-background-color: #E3E5E9;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+/* ------------------------------------------------------------ campos de formulario */
+
+.etiqueta {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 9px;
+    -fx-text-fill: -gris-texto;
+}
+
+/* Campo blanco con borde suave y la barrita verde a la izquierda, como en los prototipos */
+.campo,
+.combo-box.campo,
+.date-picker.campo-fecha {
+    -fx-background-color: -gris-borde, white;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 14, 12;
+    -fx-border-color: transparent transparent transparent -verde;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-insets: 10 0 10 14;
+    -fx-padding: 10 14 10 26;
+    -fx-font-size: 13px;
+    -fx-text-fill: -negro;
+    -fx-prompt-text-fill: #B5B8BE;
+}
+
+.campo:focused,
+.combo-box.campo:focused {
+    -fx-background-color: -verde, white;
+}
+
+.combo-box.campo {
+    -fx-padding: 4 8 4 16;
+}
+
+.combo-box.campo > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -negro;
+}
+
+.combo-box.campo > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box.campo > .arrow-button > .arrow {
+    -fx-background-color: -gris-texto;
+}
+
+/* La fecha usa el mismo recuadro que los demás campos, con el botón del calendario adentro */
+.date-picker.campo-fecha {
+    -fx-padding: 0 10 0 0;
+}
+
+.date-picker.campo-fecha:focus-within {
+    -fx-background-color: -verde, white;
+}
+
+.date-picker.campo-fecha > .text-field {
+    -fx-background-color: transparent;
+    -fx-padding: 10 4 10 26;
+    -fx-font-size: 13px;
+    -fx-text-fill: -negro;
+    -fx-prompt-text-fill: #B5B8BE;
+}
+
+.date-picker.campo-fecha > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 4 0 4;
+    -fx-cursor: hand;
+}
+
+.date-picker.campo-fecha > .arrow-button > .arrow {
+    -fx-background-color: -gris-texto;
+    -fx-padding: 7;
+}
+
+.check-box {
+    -fx-text-fill: -negro;
+}
+
+.check-box > .box {
+    -fx-background-color: -gris-borde, white;
+    -fx-background-radius: 6, 5;
+}
+
+.check-box:selected > .box {
+    -fx-background-color: -verde;
+}
+
+.check-box:selected > .box > .mark {
+    -fx-background-color: white;
+}
+
+/* ------------------------------------------------------------ botones */
+
+.boton-primario {
+    -fx-background-color: -verde;
+    -fx-background-radius: 30;
+    -fx-text-fill: white;
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 14px;
+    -fx-padding: 13 34 13 34;
+    -fx-cursor: hand;
+}
+
+.boton-primario:hover {
+    -fx-background-color: -verde-oscuro;
+}
+
+.boton-secundario {
+    -fx-background-color: -gris-borde, white;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 30;
+    -fx-text-fill: #4A4D55;
+    -fx-font-family: "Poppins Medium";
+    -fx-font-size: 12px;
+    -fx-padding: 9 20 9 20;
+    -fx-cursor: hand;
+}
+
+.boton-secundario:hover {
+    -fx-background-color: -verde, white;
+    -fx-text-fill: -verde-oscuro;
+}
+
+.boton-peligro {
+    -fx-background-color: #F3D3D2, white;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 30;
+    -fx-text-fill: -rojo;
+    -fx-font-family: "Poppins Medium";
+    -fx-font-size: 12px;
+    -fx-padding: 9 20 9 20;
+    -fx-cursor: hand;
+}
+
+.boton-peligro:hover {
+    -fx-background-color: -rojo, white;
+}
+
+/* ------------------------------------------------------------ tablas */
+
+.table-view {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: transparent;
+    -fx-padding: 4;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: white;
+    -fx-background-radius: 14 14 0 0;
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #EEF0F2 transparent;
+    -fx-size: 36;
+}
+
+.table-view .column-header .label {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 9px;
+    -fx-text-fill: -gris-texto;
+    -fx-alignment: center-left;
+    -fx-padding: 0 0 0 8;
+}
+
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-cell-size: 40;
+    -fx-text-fill: -negro;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #FAFAFB;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: -verde-claro;
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: -negro;
+}
+
+.table-cell {
+    -fx-font-size: 12px;
+    -fx-padding: 0 8 0 8;
+    -fx-alignment: center-left;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: -gris-texto;
+    -fx-font-size: 12px;
+}
+
+.chip {
+    -fx-background-radius: 20;
+    -fx-padding: 3 12 3 12;
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 10px;
+}
+
+.chip-verde {
+    -fx-background-color: -verde-claro;
+    -fx-text-fill: -verde-oscuro;
+}
+
+.chip-gris {
+    -fx-background-color: #ECEDF0;
+    -fx-text-fill: #8A8E96;
+}
+
+.chip-rojo {
+    -fx-background-color: #FBE7E6;
+    -fx-text-fill: -rojo;
+}
+
+/* ------------------------------------------------------------ cuadro del torneo */
+
+.llave {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: -gris-borde;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+    -fx-padding: 4 12 4 12;
+    -fx-font-size: 11px;
+    -fx-text-fill: -negro;
+}
+
+.llave-ganador {
+    -fx-border-color: -verde;
+    -fx-font-family: "Poppins SemiBold";
+}
+
+.llave-vacia {
+    -fx-text-fill: #B5B8BE;
+}
+
+.llave-bye {
+    -fx-text-fill: #B5B8BE;
+    -fx-font-size: 10px;
+}
+
+.linea-cuadro {
+    -fx-stroke: #DADCE0;
+    -fx-stroke-width: 2;
+}
+
+.titulo-ronda {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 9px;
+    -fx-text-fill: -gris-texto;
+}
+
+.campeon-icono {
+    -fx-fill: -verde;
+}
+
+.campeon-texto {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* ------------------------------------------------------------ indicadores */
+
+.indicador,
+.indicador-verde {
+    -fx-background-radius: 20;
+    -fx-padding: 18 22 18 22;
+}
+
+.indicador {
+    -fx-background-color: -gris-tarjeta;
+}
+
+.indicador-verde {
+    -fx-background-color: -verde;
+}
+
+.indicador-titulo {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 9px;
+    -fx-text-fill: -gris-texto;
+}
+
+.indicador-valor {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -negro;
+}
+
+.indicador-detalle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -gris-texto;
+}
+
+.indicador-verde .indicador-titulo,
+.indicador-verde .indicador-valor,
+.indicador-verde .indicador-detalle {
+    -fx-text-fill: white;
+}
+
+/* ------------------------------------------------------------ ficha del torneo */
+
+.ficha-titulo {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -negro;
+}
+
+.dato-ficha {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 14px;
+    -fx-text-fill: -negro;
+}
+
+.subtitulo-seccion {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 13px;
+    -fx-text-fill: #4A4D55;
+}
+
+.boton-seccion.activo,
+.boton-seccion.activo:hover {
+    -fx-background-color: -verde;
+    -fx-text-fill: white;
+}
+
+.boton-primario.activo {
+    -fx-background-color: -verde-oscuro;
+}
+
+.formulario-desplegable {
+    -fx-background-color: white;
+    -fx-background-radius: 18;
+    -fx-padding: 22 24 22 24;
+}
+
+.chip-grande {
+    -fx-font-size: 11px;
+    -fx-padding: 6 14 6 14;
+}
+
+/* ------------------------------------------------------------ historial */
+
+.tarjeta-historial {
+    -fx-background-color: -gris-tarjeta;
+    -fx-background-radius: 22;
+    -fx-padding: 22 24 22 24;
+    -fx-cursor: hand;
+}
+
+.tarjeta-historial:hover {
+    -fx-background-color: -verde-claro;
+}
+
+/* ------------------------------------------------------------ botones grandes de acción */
+
+.boton-accion {
+    -fx-background-color: -gris-tarjeta;
+    -fx-background-radius: 22;
+    -fx-padding: 22 26 22 26;
+    -fx-cursor: hand;
+}
+
+.boton-accion:hover {
+    -fx-background-color: -verde-claro;
+}
+
+.boton-accion.activo {
+    -fx-background-color: -verde;
+}
+
+.boton-accion.activo .tarjeta-titulo,
+.boton-accion.activo .dato-aclaracion {
+    -fx-text-fill: white;
+}
+
+.accion-icono {
+    -fx-background-color: white;
+    -fx-background-radius: 30;
+    -fx-min-width: 46;
+    -fx-min-height: 46;
+    -fx-alignment: center;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -verde;
+}
+
+/* ------------------------------------------------------------ barra compacta */
+
+.barra {
+    -fx-background-color: -gris-tarjeta;
+    -fx-background-radius: 20;
+    -fx-padding: 18 24 18 24;
+}
+
+/* ------------------------------------------------------------ calendario de programación */
+
+.dia-calendario {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 16px;
+    -fx-text-fill: -negro;
+    -fx-padding: 0 0 0 10;
+}
+
+.dia-chip {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: -gris-borde;
+    -fx-border-radius: 14;
+    -fx-border-width: 1.5;
+    -fx-padding: 7 14 7 14;
+    -fx-min-width: 96;
+    -fx-cursor: hand;
+}
+
+.dia-chip:hover {
+    -fx-border-color: -verde;
+}
+
+.dia-chip-fecha {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 12px;
+    -fx-text-fill: -negro;
+}
+
+.dia-chip-cantidad {
+    -fx-font-size: 10px;
+    -fx-text-fill: -gris-texto;
+}
+
+.dia-chip-con-partidos {
+    -fx-background-color: -verde-claro;
+    -fx-border-color: -verde-claro;
+}
+
+.dia-chip-con-partidos .dia-chip-cantidad {
+    -fx-text-fill: -verde-oscuro;
+}
+
+.dia-chip-activo,
+.dia-chip-activo:hover {
+    -fx-background-color: -verde;
+    -fx-border-color: -verde;
+}
+
+.dia-chip-activo .dia-chip-fecha,
+.dia-chip-activo .dia-chip-cantidad {
+    -fx-text-fill: white;
+}
+
+.cancha-encabezado {
+    -fx-padding: 4 0 12 0;
+}
+
+.cancha-titulo {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 14px;
+    -fx-text-fill: -negro;
+}
+
+.hora-calendario {
+    -fx-font-size: 11px;
+    -fx-text-fill: -gris-texto;
+}
+
+.celda {
+    -fx-background-color: white;
+    -fx-border-color: #ECEEF1;
+    -fx-border-width: 0.5;
+    -fx-cursor: hand;
+}
+
+.celda-media-hora {
+    -fx-border-color: transparent #ECEEF1 #E2E5E9 #ECEEF1;
+}
+
+.celda:hover {
+    -fx-background-color: -verde-claro;
+}
+
+.celda-cerrada {
+    -fx-background-color: #E9EBEE;
+    -fx-border-color: #E1E3E7;
+    -fx-border-width: 0.5;
+}
+
+.bloque {
+    -fx-background-color: -verde;
+    -fx-background-radius: 10;
+    -fx-padding: 6 10 6 10;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.10), 6, 0, 0, 2);
+}
+
+.bloque-instancia {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 10px;
+    -fx-text-fill: #EAF7E2;
+}
+
+.bloque-texto {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 11px;
+    -fx-text-fill: white;
+}
+
+.bloque-detalle {
+    -fx-font-size: 10px;
+    -fx-text-fill: #EAF7E2;
+}
+
+.bloque-finalizado {
+    -fx-background-color: #9DA1A8;
+}
+
+.bloque-otro-torneo {
+    -fx-opacity: 0.45;
+}
+
+.bloque-seleccionado {
+    -fx-border-color: -negro;
+    -fx-border-width: 2.5;
+    -fx-border-radius: 10;
+    -fx-opacity: 1;
+}
+
+.lista-pendientes {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 4;
+}
+
+.lista-pendientes .list-cell {
+    -fx-background-color: white;
+    -fx-padding: 8 10 8 10;
+    -fx-border-color: transparent transparent #EEF0F2 transparent;
+}
+
+.lista-pendientes .list-cell:selected {
+    -fx-background-color: -verde-claro;
+}
+
+.texto-partido {
+    -fx-font-size: 12px;
+    -fx-text-fill: -negro;
+}
+
+.dato-seleccion {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 13px;
+    -fx-text-fill: white;
+}
+
+.tarjeta-verde .dato-aclaracion {
+    -fx-text-fill: #EAF7E2;
+}
+
+.boton-blanco {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-text-fill: -verde-oscuro;
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 12px;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+}
+
+.boton-blanco:hover {
+    -fx-background-color: #F1FAEC;
+}
+
+.transparente,
+.transparente > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+}
+
+/* ------------------------------------------------------------ varios */
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: white;
+}
+
+.mensaje-vacio {
+    -fx-text-fill: -gris-texto;
+    -fx-font-size: 13px;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 6 14 6 14;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: -verde-claro;
+    -fx-background-radius: 20;
+}
+
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #5E626B;
+    -fx-font-family: "Poppins Medium";
+}
+
+.dialog-pane {
+    -fx-background-color: white;
+    -fx-font-family: "Poppins";
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: -gris-tarjeta;
+}
+
+.dialog-pane > .header-panel .label {
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 15px;
+}
+
+.dialog-pane .button {
+    -fx-background-radius: 20;
+    -fx-padding: 7 18 7 18;
+}
+
+.dialog-pane .button:default {
+    -fx-background-color: -verde;
+    -fx-text-fill: white;
+}
