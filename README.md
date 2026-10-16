@@ -2,43 +2,58 @@
 
 Sistema de gestión y organización de torneos de tenis para el club **Los Cuervos Tenis**.
 
-Proyecto desarrollado para la materia **Seminario de Práctica** de la Licenciatura en Informática (Universidad Siglo 21).
+Proyecto de la materia **Seminario de Práctica** – Licenciatura en Informática, Universidad Siglo 21.
 
-## Descripción
+## Funcionalidades
 
-Primer Punto centraliza en una misma herramienta todas las etapas de la organización de un torneo de tenis:
-
-- Configuración de torneos (modalidad, costo, fechas, lugar y plazo de inscripción).
-- Inscripción de jugadores o parejas y registro del estado de pago.
-- Generación automática de cuadros de eliminación directa y zonas de todos contra todos.
-- Programación de partidos según la disponibilidad de canchas y horarios.
-- Registro de resultados, tablas de posiciones e historial de torneos.
+- **Torneos:** alta de torneos (modalidad, costo, fechas, plazo de inscripción, duración de los partidos y formato de resultado), consulta, filtro por estado, ordenamiento y búsqueda por fecha, cierre de inscripción y finalización.
+- **Participantes:** registro de jugadores, inscripción de jugadores o parejas con control de plazo, duplicados y pago; registro de pagos y bajas dentro y fuera de plazo.
+- **Formato:** generación de cuadros de eliminación directa (con cálculo de byes) y zonas de todos contra todos, por sorteo o armados a mano; tabla de posiciones.
+- **Programación:** calendario de canchas por día, programación manual y automática respetando horarios de las canchas, descanso mínimo entre partidos y máximo de partidos por día; carga de resultados.
+- **Historial** de torneos finalizados.
 
 ## Tecnologías
 
 | Componente | Tecnología |
 |---|---|
-| Lenguaje | Java |
-| Interfaz gráfica | JavaFX |
-| Base de datos | MySQL |
-| Conexión a la base de datos | JDBC (MySQL Connector/J) |
+| Lenguaje | Java 21 |
+| Interfaz gráfica | JavaFX 23 |
+| Construcción del proyecto | Maven |
+| Pruebas | JUnit 5 |
+| Base de datos (próxima etapa) | MySQL |
 
-La aplicación se ejecuta en una PC del club, con la base de datos MySQL instalada en el mismo equipo (`localhost:3306`).
+En esta versión del prototipo los datos se mantienen en memoria y se cargan datos de ejemplo al iniciar. La persistencia en MySQL se incorpora en la siguiente etapa.
 
-## Estructura del repositorio
+## Estructura
 
 ```
 primer-punto/
-├── README.md
-└── base_datos/
-    └── primer_punto.sql   → creación de la base y las tablas, datos de prueba, consultas y borrado
+├── pom.xml
+├── primer_punto.sql                   script de la base de datos
+└── src/
+    ├── main/java/primerpunto/
+    │   ├── App.java                   punto de entrada
+    │   ├── modelo/                    entidades (Torneo, Jugador, Pareja, Cuadro, Zona, Partido...)
+    │   ├── negocio/                   controladores (GestionTorneos, GestionParticipantes...)
+    │   ├── excepciones/               excepciones propias del sistema
+    │   └── vista/                     ventanas JavaFX
+    ├── main/resources/primerpunto/vista/   estilos, logo y tipografía
+    └── test/java/primerpunto/         casos de prueba automatizados
 ```
 
-## Cómo ejecutar el script de la base de datos
+## Cómo ejecutarlo
 
-1. Abrir un cliente de MySQL (por ejemplo, HeidiSQL o MySQL Workbench).
-2. Abrir el archivo `base_datos/primer_punto.sql`.
-3. Ejecutar el script completo: crea la base `primer_punto`, sus 11 tablas, inserta datos de prueba, ejecuta las consultas y finalmente borra los datos de prueba.
+Requisitos: JDK 21 o superior y Maven (incluido en NetBeans).
+
+- **NetBeans:** abrir la carpeta del proyecto y ejecutar con *Run* (F6).
+- **Consola:** `mvn clean javafx:run`
+
+## Pruebas
+
+Los casos de prueba de la documentación (CPF01, CPC02, CPS03, CPS04 y CPS05) y las reglas de programación están automatizados con JUnit:
+
+- **NetBeans:** clic derecho sobre el proyecto → *Test* (Alt + F6).
+- **Consola:** `mvn test`
 
 ## Autora
 
