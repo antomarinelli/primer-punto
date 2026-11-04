@@ -11,9 +11,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import primerpunto.datos.CanchaDAO;
+import primerpunto.datos.ExportadorCSV;
+import primerpunto.datos.FormatoDAO;
+import primerpunto.datos.SinPersistencia;
+import primerpunto.excepciones.ArchivoException;
 import primerpunto.excepciones.CanchaOcupadaException;
 import primerpunto.excepciones.DatoInvalidoException;
 import primerpunto.excepciones.DescansoInsuficienteException;
+import primerpunto.excepciones.PersistenciaException;
 import primerpunto.excepciones.PrimerPuntoException;
 import primerpunto.modelo.Cancha;
 import primerpunto.modelo.Cuadro;
@@ -43,38 +49,78 @@ public class GestionPartidosCanchas {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM");
 
     private final GestionTorneos gestionTorneos;
+    private final CanchaDAO canchaDAO;
+    private final FormatoDAO formatoDAO;
+    private final ExportadorCSV exportador = new ExportadorCSV();
     private final List<Cancha> canchas = new ArrayList<>();
     private int proximoIdCancha = 1;
     private int proximoIdResultado = 1;
 
+    /** Sin base de datos (lo usan las pruebas automatizadas). */
     public GestionPartidosCanchas(GestionTorneos gestionTorneos) {
+        this(gestionTorneos, new CanchaDAO(new SinPersistencia()), new FormatoDAO(new SinPersistencia()));
+    }
+
+    public GestionPartidosCanchas(GestionTorneos gestionTorneos, CanchaDAO canchaDAO, FormatoDAO formatoDAO) {
         this.gestionTorneos = gestionTorneos;
+        this.canchaDAO = canchaDAO;
+        this.formatoDAO = formatoDAO;
+    }
+
+    /** Recibe las canchas leídas de la base y continúa la numeración de canchas y resultados. */
+    void restaurar(List<Cancha> canchasGuardadas, int ultimoIdCancha, int ultimoIdResultado) {
+        canchas.clear();
+        canchas.addAll(canchasGuardadas);
+        proximoIdCancha = ultimoIdCancha + 1;
+        proximoIdResultado = ultimoIdResultado + 1;
     }
 
     // ------------------------------------------------------------ canchas
 
     /** Registra una cancha del club con su horario de funcionamiento (CU02). */
     public Cancha registrarCancha(int numero, LocalTime horaApertura, LocalTime horaCierre)
-            throws DatoInvalidoException {
+            throws PrimerPuntoException {
         validarNumeroLibre(numero, null);
+        Cancha cancha;
         try {
-            Cancha cancha = new Cancha(proximoIdCancha, numero, horaApertura, horaCierre);
-            canchas.add(cancha);
-            proximoIdCancha++;
-            return cancha;
+            cancha = new Cancha(proximoIdCancha, numero, horaApertura, horaCierre);
         } catch (IllegalArgumentException e) {
             throw new DatoInvalidoException(e.getMessage(), e);
         }
+        canchaDAO.insertar(cancha);
+        canchas.add(cancha);
+        proximoIdCancha++;
+        return cancha;
     }
 
     /** Modifica el número o el horario de una cancha existente (CU02, flujo alternativo 1). */
     public void modificarCancha(Cancha cancha, int numero, LocalTime horaApertura, LocalTime horaCierre)
-            throws DatoInvalidoException {
+            throws PrimerPuntoException {
         validarNumeroLibre(numero, cancha);
+        int numeroAnterior = cancha.getNumero();
+        LocalTime aperturaAnterior = cancha.getHoraApertura();
+        LocalTime cierreAnterior = cancha.getHoraCierre();
         try {
             cancha.setDatos(numero, horaApertura, horaCierre);
         } catch (IllegalArgumentException e) {
             throw new DatoInvalidoException(e.getMessage(), e);
+        }
+        try {
+            canchaDAO.actualizar(cancha);
+        } catch (PersistenciaException e) {
+            cancha.setDatos(numeroAnterior, aperturaAnterior, cierreAnterior);
+            throw e;
+        }
+    }
+
+    /** Habilita o inhabilita una cancha (por ejemplo, por lluvia o mantenimiento). */
+    public void cambiarDisponibilidad(Cancha cancha) throws PersistenciaException {
+        cancha.setDisponibilidad(!cancha.getDisponibilidad());
+        try {
+            canchaDAO.actualizar(cancha);
+        } catch (PersistenciaException e) {
+            cancha.setDisponibilidad(!cancha.getDisponibilidad());
+            throw e;
         }
     }
 
@@ -148,19 +194,21 @@ public class GestionPartidosCanchas {
                 throw new DescansoInsuficienteException(faltaDescanso);
             }
         }
+        formatoDAO.actualizarProgramacion(partido, cancha, fecha, horario);
         partido.setHorarioYCancha(cancha, fecha, horario);
     }
 
     /** Libera la cancha y el horario de un partido que todavía no se jugó. */
-    public void quitarProgramacion(Partido partido) throws DatoInvalidoException {
+    public void quitarProgramacion(Partido partido) throws PrimerPuntoException {
         if (partido.estaFinalizado()) {
             throw new DatoInvalidoException("El partido ya se jugó: no se puede quitar de la programación.");
         }
+        formatoDAO.actualizarProgramacion(partido, null, null, null);
         partido.quitarProgramacion();
     }
 
     /** Programa automáticamente todos los partidos pendientes, desde hoy o desde el inicio del torneo. */
-    public int programarPartidos(Torneo torneo) throws DatoInvalidoException {
+    public int programarPartidos(Torneo torneo) throws PrimerPuntoException {
         LocalDate hoy = LocalDate.now();
         LocalDate desde = hoy.isAfter(torneo.getFechaInicio()) && !hoy.isAfter(torneo.getFechaFin())
                 ? hoy : torneo.getFechaInicio();
@@ -175,7 +223,7 @@ public class GestionPartidosCanchas {
      *
      * @return la cantidad de partidos programados
      */
-    public int programarPartidos(Torneo torneo, LocalDate desde) throws DatoInvalidoException {
+    public int programarPartidos(Torneo torneo, LocalDate desde) throws PrimerPuntoException {
         List<Cancha> habilitadas = new ArrayList<>();
         for (Cancha cancha : listarCanchas()) {
             if (cancha.getDisponibilidad()) {
@@ -192,15 +240,25 @@ public class GestionPartidosCanchas {
             }
         }
         pendientes.sort(Comparator.comparingInt(Partido::getRonda)); // primero las rondas iniciales
-        int programados = 0;
-        for (Partido partido : pendientes) {
-            if (!asignarPrimerTurnoLibre(torneo, partido, habilitadas, desde)) {
-                throw new DatoInvalidoException("No hay canchas u horarios suficientes: se programaron "
-                        + programados + " de " + pendientes.size() + " partidos.");
+        // Cada partido se ubica en memoria, porque los siguientes tienen que respetar a los anteriores;
+        // al final se guardan todos juntos. Si falla algo, ninguno queda programado.
+        List<Partido> asignados = new ArrayList<>();
+        try {
+            for (Partido partido : pendientes) {
+                if (!asignarPrimerTurnoLibre(torneo, partido, habilitadas, desde)) {
+                    throw new DatoInvalidoException("No hay canchas u horarios suficientes: había lugar para "
+                            + asignados.size() + " de " + pendientes.size() + " partidos.");
+                }
+                asignados.add(partido);
             }
-            programados++;
+            formatoDAO.actualizarProgramaciones(asignados);
+        } catch (PrimerPuntoException e) {
+            for (Partido partido : asignados) {
+                partido.quitarProgramacion();
+            }
+            throw e;
         }
-        return programados;
+        return asignados.size();
     }
 
     private boolean asignarPrimerTurnoLibre(Torneo torneo, Partido partido, List<Cancha> habilitadas, LocalDate desde) {
@@ -461,6 +519,11 @@ public class GestionPartidosCanchas {
         return delDia;
     }
 
+    /** Exporta a un archivo CSV los partidos de un día, de todos los torneos, para la cartelera del club. */
+    public void exportarProgramacion(LocalDate dia, String rutaArchivo) throws ArchivoException {
+        exportador.exportarProgramacion(dia, consultarPartidosDelDia(dia), gestionTorneos.listarTorneos(null), rutaArchivo);
+    }
+
     /** Torneo al que pertenece un partido. */
     public Torneo buscarTorneo(Partido partido) {
         for (Torneo torneo : gestionTorneos.listarTorneos(null)) {
@@ -494,7 +557,7 @@ public class GestionPartidosCanchas {
      *                 deduce del marcador y, si se indica, debe coincidir con él
      */
     public void registrarResultado(Torneo torneo, Partido partido, String marcador, Participante ganador,
-                                   boolean esWO, boolean esRetiro) throws DatoInvalidoException {
+                                   boolean esWO, boolean esRetiro) throws PrimerPuntoException {
         if (partido.estaFinalizado()) {
             throw new DatoInvalidoException("El partido ya tiene un resultado cargado. Usá «modificar resultado».");
         }
@@ -503,7 +566,7 @@ public class GestionPartidosCanchas {
 
     /** Corrige un resultado ya registrado (CU13, flujo alternativo 1). */
     public void modificarResultado(Torneo torneo, Partido partido, String marcador, Participante ganador,
-                                   boolean esWO, boolean esRetiro) throws DatoInvalidoException {
+                                   boolean esWO, boolean esRetiro) throws PrimerPuntoException {
         if (!partido.estaFinalizado()) {
             throw new DatoInvalidoException("El partido todavía no tiene un resultado para modificar.");
         }
@@ -515,7 +578,7 @@ public class GestionPartidosCanchas {
     }
 
     private void guardarResultado(Torneo torneo, Partido partido, String marcador, Participante ganador,
-                                  boolean esWO, boolean esRetiro) throws DatoInvalidoException {
+                                  boolean esWO, boolean esRetiro) throws PrimerPuntoException {
         if (!partido.estaDefinido()) {
             throw new DatoInvalidoException("Todavía no se conocen los dos participantes de este partido.");
         }
@@ -548,15 +611,21 @@ public class GestionPartidosCanchas {
             }
             ganadorFinal = segunMarcador;
         }
+        Resultado resultado;
         try {
-            Resultado resultado = new Resultado(proximoIdResultado, marcador, ganadorFinal, esWO, esRetiro,
+            resultado = new Resultado(proximoIdResultado, marcador, ganadorFinal, esWO, esRetiro,
                     torneo.getFormatoResultado());
-            partido.setResultado(resultado);
-            proximoIdResultado++;
         } catch (IllegalArgumentException e) {
             throw new DatoInvalidoException(e.getMessage(), e);
         }
-        buscarFormato(torneo, partido).procesarResultado(partido); // avanza el ganador o actualiza la tabla
+        // En un cuadro el ganador pasa al partido siguiente: se guarda todo junto antes de cambiar la memoria
+        Formato formato = buscarFormato(torneo, partido);
+        Partido siguiente = formato instanceof Cuadro cuadro ? cuadro.buscarPartidoSiguiente(partido) : null;
+        int lado = partido.getPosicion() % 2 == 0 ? 1 : 2;
+        formatoDAO.guardarResultado(partido, resultado, siguiente, lado);
+        proximoIdResultado++;
+        partido.setResultado(resultado);
+        formato.procesarResultado(partido); // avanza el ganador o actualiza la tabla
     }
 
     private Formato buscarFormato(Torneo torneo, Partido partido) throws DatoInvalidoException {

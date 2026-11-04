@@ -45,6 +45,11 @@ public abstract class Formato {
         return contadorPartidos++;
     }
 
+    /** Al cargar los datos de la base, la numeración sigue después del último partido guardado. */
+    public static void continuarNumeracionPartidos(int ultimoIdGuardado) {
+        contadorPartidos = Math.max(contadorPartidos, ultimoIdGuardado + 1);
+    }
+
     /** Nombre del formato para mostrar en pantalla, por ejemplo "Cuadro de 8" o "Zona 2". */
     public abstract String getDescripcion();
 

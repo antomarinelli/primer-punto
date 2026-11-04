@@ -53,6 +53,22 @@ public class Zona extends Formato {
         }
     }
 
+    /**
+     * Vuelve a armar una zona guardada en la base. Sus participantes son los que
+     * aparecen en sus partidos, en el orden en que se cruzaron.
+     */
+    public void restaurar(List<Partido> partidos) {
+        participantes.clear();
+        for (Partido partido : partidos) {
+            agregarPartido(partido);
+            for (Participante participante : new Participante[] {partido.getParticipante1(), partido.getParticipante2()}) {
+                if (!participantes.contains(participante)) {
+                    participantes.add(participante);
+                }
+            }
+        }
+    }
+
     /** En una zona no hay avance de ronda: el resultado se refleja en la tabla de posiciones. */
     @Override
     public void procesarResultado(Partido partido) {

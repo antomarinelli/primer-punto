@@ -6,7 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import primerpunto.modelo.Cuadro;
+import primerpunto.modelo.Participante;
 import primerpunto.modelo.Torneo;
 import primerpunto.negocio.Sistema;
 
@@ -51,9 +51,8 @@ public class VentanaHistorial extends VistaBase {
     }
 
     private VBox crearTarjeta(Torneo torneo) {
-        Cuadro cuadro = sistema.getGestionCuadrosZonas().obtenerCuadro(torneo);
-        String campeon = cuadro != null && cuadro.getCampeon() != null
-                ? cuadro.getCampeon().obtenerNombreCompleto() : "—";
+        Participante ganador = sistema.getGestionCuadrosZonas().obtenerCampeon(torneo);
+        String campeon = ganador == null ? "—" : ganador.obtenerNombreCompleto();
         Label modalidad = new Label(torneo.getModalidad().toString());
         modalidad.getStyleClass().addAll("chip", "chip-gris");
         VBox tarjeta = new VBox(8,

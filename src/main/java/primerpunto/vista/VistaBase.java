@@ -1,5 +1,6 @@
 package primerpunto.vista;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import primerpunto.excepciones.DatoInvalidoException;
 import primerpunto.negocio.Sistema;
@@ -362,6 +364,19 @@ public abstract class VistaBase extends VBox {
         prepararDialogo(alerta);
         Optional<ButtonType> respuesta = alerta.showAndWait();
         return respuesta.isPresent() && respuesta.get() == ButtonType.OK;
+    }
+
+    /**
+     * Ventana "Guardar como" para elegir dónde se guarda un archivo CSV.
+     * Devuelve la ruta elegida, o null si el organizador cancela.
+     */
+    protected String elegirDondeGuardar(String nombreSugerido) {
+        FileChooser selector = new FileChooser();
+        selector.setTitle("Exportar a CSV (se abre con Excel)");
+        selector.setInitialFileName(nombreSugerido.replaceAll("[\\\\/:*?\"<>|]", "-") + ".csv");
+        selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivo CSV", "*.csv"));
+        File archivo = selector.showSaveDialog(getScene() == null ? null : getScene().getWindow());
+        return archivo == null ? null : archivo.getAbsolutePath();
     }
 
     /** Aplica a los cuadros de diálogo la misma hoja de estilos que la ventana principal. */

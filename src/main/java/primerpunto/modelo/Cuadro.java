@@ -117,6 +117,34 @@ public class Cuadro extends Formato {
     }
 
     /**
+     * Vuelve a armar un cuadro guardado en la base a partir de sus partidos. Los
+     * lugares de cada ronda salen de los participantes de los partidos; quien tuvo
+     * bye aparece en la segunda ronda, y cada ganador ocupa su lugar en la siguiente.
+     */
+    public void restaurar(int tamanio, int cantidadByes, List<Partido> partidos) {
+        this.tamanio = tamanio;
+        this.cantidadByes = cantidadByes;
+        rondas.clear();
+        for (int lugares = tamanio; lugares >= 1; lugares /= 2) {
+            rondas.add(new Participante[lugares]);
+        }
+        for (Partido partido : partidos) {
+            agregarPartido(partido);
+            Participante[] lugares = rondas.get(partido.getRonda());
+            lugares[2 * partido.getPosicion()] = partido.getParticipante1();
+            lugares[2 * partido.getPosicion() + 1] = partido.getParticipante2();
+        }
+        for (int i = 0; i < cantidadByes; i++) {
+            rondas.get(0)[2 * i] = rondas.get(1)[i];
+        }
+        for (Partido partido : partidos) {
+            if (partido.estaFinalizado()) {
+                rondas.get(partido.getRonda() + 1)[partido.getPosicion()] = partido.getGanador();
+            }
+        }
+    }
+
+    /**
      * Cuando termina un partido, el ganador avanza a la ronda siguiente (RF25).
      * Si se corrigió un resultado y cambió el ganador, se reemplaza en el partido
      * siguiente (que todavía no se jugó).

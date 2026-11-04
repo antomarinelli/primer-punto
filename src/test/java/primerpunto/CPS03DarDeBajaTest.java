@@ -50,7 +50,7 @@ class CPS03DarDeBajaTest {
 
     @Test
     @DisplayName("E1: baja dentro de plazo (25/09/2026) - estado 'Baja', el torneo queda con 2 inscriptos activos")
-    void bajaDentroDePlazo() throws DatoInvalidoException {
+    void bajaDentroDePlazo() throws PrimerPuntoException {
         boolean dadoDeBaja = gestionParticipantes.procesarBaja(torneo, inscripcionLucas, null, false,
                 LocalDate.of(2026, 9, 25));
         assertTrue(dadoDeBaja);
@@ -60,7 +60,7 @@ class CPS03DarDeBajaTest {
 
     @Test
     @DisplayName("E2: fuera de plazo con motivo aceptado - estado 'Baja', motivo registrado, sin deuda")
-    void bajaFueraDePlazoMotivoAceptado() throws DatoInvalidoException {
+    void bajaFueraDePlazoMotivoAceptado() throws PrimerPuntoException {
         boolean dadoDeBaja = gestionParticipantes.procesarBaja(torneo, inscripcionAntonella,
                 "Lesión de muñeca con certificado médico", true, FUERA_DE_PLAZO);
         assertTrue(dadoDeBaja);
@@ -72,7 +72,7 @@ class CPS03DarDeBajaTest {
 
     @Test
     @DisplayName("E3: fuera de plazo con motivo rechazado - la inscripción no cambia y el pago sigue adeudado")
-    void bajaFueraDePlazoMotivoRechazado() throws DatoInvalidoException {
+    void bajaFueraDePlazoMotivoRechazado() throws PrimerPuntoException {
         boolean dadoDeBaja = gestionParticipantes.procesarBaja(torneo, inscripcionSofia, "Viaje personal", false,
                 FUERA_DE_PLAZO);
         assertFalse(dadoDeBaja, "La solicitud de baja no fue aceptada");

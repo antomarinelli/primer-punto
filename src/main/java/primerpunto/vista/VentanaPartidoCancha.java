@@ -113,6 +113,7 @@ public class VentanaPartidoCancha extends VistaBase {
         HBox.setHgrow(campoTorneo, Priority.NEVER);
         HBox.setHgrow(campoFecha, Priority.NEVER);
         HBox fila = new HBox(16, campoTorneo, campoFecha, espacio(),
+                botonSecundario("Exportar día", e -> exportarDia()),
                 botonPrimario("Programar automáticamente", e -> programarAutomatico()));
         fila.setAlignment(Pos.BOTTOM_LEFT);
         VBox dias = new VBox(8, lblPeriodo, diasTorneo);
@@ -539,13 +540,35 @@ public class VentanaPartidoCancha extends VistaBase {
         }
     }
 
+    /** Guarda en un archivo CSV los partidos del día que se está viendo, para la cartelera del club. */
+    private void exportarDia() {
+        if (gestion.consultarPartidosDelDia(dia).isEmpty()) {
+            mostrarError("No hay partidos programados el " + dia.format(DIA) + ".");
+            return;
+        }
+        String ruta = elegirDondeGuardar("Programacion " + dia);
+        if (ruta == null) {
+            return;
+        }
+        try {
+            gestion.exportarProgramacion(dia, ruta);
+            mostrarInfo("Programación exportada", "Se guardó el archivo " + ruta + ".");
+        } catch (PrimerPuntoException e) {
+            mostrarError(e.getMessage());
+        }
+    }
+
     private void cambiarDisponibilidad() {
         Cancha cancha = tablaCanchas.getSelectionModel().getSelectedItem();
         if (cancha == null) {
             mostrarError("Seleccioná una cancha de la lista.");
             return;
         }
-        cancha.setDisponibilidad(!cancha.getDisponibilidad());
+        try {
+            gestion.cambiarDisponibilidad(cancha);
+        } catch (PrimerPuntoException e) {
+            mostrarError(e.getMessage());
+        }
         cargarCanchas();
         dibujarCalendario();
     }

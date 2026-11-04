@@ -19,9 +19,9 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import primerpunto.excepciones.PrimerPuntoException;
-import primerpunto.modelo.Cuadro;
 import primerpunto.modelo.EstadoTorneo;
 import primerpunto.modelo.Inscripcion;
+import primerpunto.modelo.Participante;
 import primerpunto.modelo.Partido;
 import primerpunto.modelo.Torneo;
 import primerpunto.negocio.GestionParticipantes;
@@ -110,9 +110,9 @@ public class FichaTorneo extends VBox {
                 dato("Duración del partido", VistaBase.formatearDuracion(torneo.getDuracionPartidoMinutos())),
                 dato("Formato de resultado", torneo.getFormatoResultado().toString()),
                 dato("Inscriptos", String.valueOf(torneo.getInscripcionesActivas().size())));
-        Cuadro cuadro = sistema.getGestionCuadrosZonas().obtenerCuadro(torneo);
-        if (cuadro != null && cuadro.getCampeon() != null) {
-            datos.getChildren().add(dato("Campeón", cuadro.getCampeon().obtenerNombreCompleto()));
+        Participante campeon = sistema.getGestionCuadrosZonas().obtenerCampeon(torneo);
+        if (campeon != null) {
+            datos.getChildren().add(dato("Campeón", campeon.obtenerNombreCompleto()));
         }
         return datos;
     }
@@ -150,11 +150,13 @@ public class FichaTorneo extends VBox {
         tablaInscriptos.setPrefHeight(Math.min(560, 50 + 40 * Math.max(2, torneo.getInscripciones().size())));
         VBox seccion = new VBox(12, vista.etiquetaClase("Participantes inscriptos", "subtitulo-seccion"), tablaInscriptos);
         boolean inscripcionEnCurso = torneo.getEstado() != EstadoTorneo.FINALIZADO;
+        HBox botones = new HBox(10);
         if (permiteOperar && inscripcionEnCurso) {
-            seccion.getChildren().add(new HBox(10,
-                    vista.botonSecundario("Registrar pago", e -> registrarPago()),
-                    vista.botonPeligro("Dar de baja", e -> darDeBaja())));
+            botones.getChildren().addAll(vista.botonSecundario("Registrar pago", e -> registrarPago()),
+                    vista.botonPeligro("Dar de baja", e -> darDeBaja()));
         }
+        botones.getChildren().add(vista.botonSecundario("Exportar inscriptos", e -> exportarInscriptos()));
+        seccion.getChildren().add(botones);
         return seccion;
     }
 
@@ -194,12 +196,27 @@ public class FichaTorneo extends VBox {
         }
     }
 
+    /** Guarda en un archivo CSV los inscriptos del torneo con su estado de pago. */
+    private void exportarInscriptos() {
+        String ruta = vista.elegirDondeGuardar("Inscriptos - " + torneo.getNombre());
+        if (ruta == null) {
+            return;
+        }
+        try {
+            sistema.getGestionParticipantes().exportarInscriptos(torneo, ruta);
+            vista.mostrarInfo("Listado exportado", "Se guardó el archivo " + ruta + ".");
+        } catch (PrimerPuntoException e) {
+            vista.mostrarError(e.getMessage());
+        }
+    }
+
     /** CU15: finaliza el torneo si ya se disputaron todos sus partidos. */
     private void finalizarTorneo() {
         if (!vista.confirmar("Finalizar torneo", "¿Finalizar " + torneo.getNombre() + "?")) {
             return;
         }
         try {
+            sistema.getGestionCuadrosZonas().validarFinalizacion(torneo);
             sistema.getGestionTorneos().finalizarTorneo(torneo,
                     sistema.getGestionCuadrosZonas().todosLosPartidosJugados(torneo));
             vista.mostrarInfo("Torneo finalizado", torneo.getNombre() + " pasó al historial.");

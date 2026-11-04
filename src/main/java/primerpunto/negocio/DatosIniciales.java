@@ -16,9 +16,10 @@ import primerpunto.modelo.Torneo;
 import primerpunto.modelo.Zona;
 
 /**
- * Carga datos de ejemplo al iniciar el prototipo, para poder recorrer todas las
- * funcionalidades sin cargar todo desde cero. Mientras el prototipo trabaje en
- * memoria, estos datos reemplazan a los que en la próxima etapa vendrán de MySQL.
+ * Carga datos de ejemplo la primera vez que se usa el programa (con la base vacía),
+ * para poder recorrer todas las funcionalidades sin cargar todo desde cero. Se cargan
+ * a través de los controladores, así que pasan por las mismas validaciones que los
+ * datos que ingresa el organizador y quedan guardados en MySQL.
  *
  * Las fechas se calculan a partir del día en que se ejecuta el programa, de modo
  * que siempre haya un torneo con la inscripción abierta, uno con el plazo vencido,

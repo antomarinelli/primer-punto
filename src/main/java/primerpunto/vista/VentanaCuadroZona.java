@@ -393,12 +393,13 @@ public class VentanaCuadroZona extends VistaBase {
             resumen.getChildren().addAll(chip(cuadro.getDescripcion(), "chip-gris"),
                     chip(cantidad(cuadro.getCantidadRondas(), "ronda", "rondas"), "chip-gris"),
                     chip(cantidad(cuadro.getCantidadByes(), "bye", "byes"), "chip-gris"));
-            if (cuadro.getCampeon() != null) {
-                resumen.getChildren().add(chip("Campeón: " + cuadro.getCampeon().obtenerNombreCompleto(), "chip-verde"));
-            }
         }
         if (!zonas.isEmpty()) {
             resumen.getChildren().add(chip(cantidad(zonas.size(), "zona", "zonas"), "chip-gris"));
+        }
+        Participante campeon = gestion.obtenerCampeon(torneo);
+        if (campeon != null) {
+            resumen.getChildren().add(chip("Campeón: " + campeon.obtenerNombreCompleto(), "chip-verde"));
         }
 
         areaFormato.getChildren().add(etiquetaClase(torneo.getNombre(), "tarjeta-titulo"));

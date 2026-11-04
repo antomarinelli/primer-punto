@@ -3,7 +3,11 @@ package primerpunto.negocio;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import primerpunto.datos.SinPersistencia;
+import primerpunto.datos.TorneoDAO;
 import primerpunto.excepciones.DatoInvalidoException;
+import primerpunto.excepciones.PersistenciaException;
+import primerpunto.excepciones.PrimerPuntoException;
 import primerpunto.modelo.EstadoTorneo;
 import primerpunto.modelo.FormatoResultado;
 import primerpunto.modelo.Modalidad;
@@ -13,18 +17,35 @@ import primerpunto.modelo.Torneo;
  * Controlador del módulo Torneos: crea torneos, los lista, ordena y busca, y
  * administra los cambios de estado (cierre de inscripción y finalización).
  *
- * En este prototipo los torneos se guardan en memoria; en la próxima etapa se
- * persistirán en la base de datos MySQL.
+ * Los torneos se mantienen en una lista mientras el programa está abierto, y cada
+ * alta o cambio de estado se guarda en la base de datos a través de TorneoDAO.
  */
 public class GestionTorneos {
 
+    private final TorneoDAO dao;
     private final List<Torneo> torneos = new ArrayList<>();
     private int proximoId = 1;
+
+    /** Sin base de datos (lo usan las pruebas automatizadas). */
+    public GestionTorneos() {
+        this(new TorneoDAO(new SinPersistencia()));
+    }
+
+    public GestionTorneos(TorneoDAO dao) {
+        this.dao = dao;
+    }
+
+    /** Recibe los torneos leídos de la base al iniciar el programa. */
+    void restaurar(List<Torneo> guardados, int ultimoIdGuardado) {
+        torneos.clear();
+        torneos.addAll(guardados);
+        proximoId = ultimoIdGuardado + 1;
+    }
 
     /** Crea un torneo con partidos de 1 h 30 min al mejor de 3 sets. */
     public Torneo crearTorneo(String nombre, Modalidad modalidad, double costo, LocalDate fechaInicio,
                               LocalDate fechaFin, LocalDate plazoInscripcion, String lugar)
-            throws DatoInvalidoException {
+            throws PrimerPuntoException {
         return crearTorneo(nombre, modalidad, costo, fechaInicio, fechaFin, plazoInscripcion, lugar, 90,
                 FormatoResultado.MEJOR_DE_TRES);
     }
@@ -36,22 +57,25 @@ public class GestionTorneos {
     public Torneo crearTorneo(String nombre, Modalidad modalidad, double costo, LocalDate fechaInicio,
                               LocalDate fechaFin, LocalDate plazoInscripcion, String lugar,
                               int duracionPartidoMinutos, FormatoResultado formatoResultado)
-            throws DatoInvalidoException {
+            throws PrimerPuntoException {
         for (Torneo existente : torneos) {
             if (nombre != null && existente.getNombre().equalsIgnoreCase(nombre.trim())) {
                 throw new DatoInvalidoException("Ya existe un torneo con el nombre «" + nombre.trim() + "».");
             }
         }
+        Torneo torneo;
         try {
-            Torneo torneo = new Torneo(proximoId, nombre, modalidad, costo, fechaInicio, fechaFin,
+            torneo = new Torneo(proximoId, nombre, modalidad, costo, fechaInicio, fechaFin,
                     plazoInscripcion, lugar, duracionPartidoMinutos, formatoResultado);
-            torneos.add(torneo);
-            proximoId++;
-            return torneo;
         } catch (IllegalArgumentException e) {
             // El constructor de Torneo rechazó los datos: se informa como un error del negocio
             throw new DatoInvalidoException(e.getMessage(), e);
         }
+        // Primero se guarda en la base: si falla, el torneo no se agrega a la lista
+        dao.insertar(torneo);
+        torneos.add(torneo);
+        proximoId++;
+        return torneo;
     }
 
     /** Busca un torneo por su identificador. */
@@ -66,7 +90,13 @@ public class GestionTorneos {
 
     /** Lista los torneos, filtrando por estado si se indica uno (CU04, RF28). */
     public List<Torneo> listarTorneos(EstadoTorneo filtroEstado) {
-        actualizarEstados(LocalDate.now());
+        try {
+            actualizarEstados(LocalDate.now());
+        } catch (PersistenciaException e) {
+            // El cierre por plazo se recalcula cada vez que se inicia el programa: si ahora no se
+            // pudo guardar, el listado se muestra igual con el estado correcto
+            System.err.println("No se pudo guardar el cierre de inscripción: " + e.getMessage());
+        }
         List<Torneo> resultado = new ArrayList<>();
         for (Torneo torneo : torneos) {
             if (filtroEstado == null || torneo.getEstado() == filtroEstado) {
@@ -90,32 +120,44 @@ public class GestionTorneos {
      * Cierra automáticamente la inscripción de los torneos cuyo plazo venció (RF12).
      * No hace falta que el organizador lo haga a mano: se revisa cada vez que se consultan los torneos.
      */
-    public void actualizarEstados(LocalDate hoy) {
+    public void actualizarEstados(LocalDate hoy) throws PersistenciaException {
         for (Torneo torneo : torneos) {
             if (torneo.getEstado() == EstadoTorneo.INSCRIPCION_ABIERTA && torneo.verificarPlazoVencido(hoy)) {
-                torneo.setEstado(EstadoTorneo.INSCRIPCION_CERRADA);
+                cambiarEstado(torneo, EstadoTorneo.INSCRIPCION_CERRADA);
             }
         }
     }
 
     /** Permite al organizador cerrar la inscripción antes del plazo (por ejemplo, si se completó el cupo). */
-    public void cerrarInscripcion(Torneo torneo) throws DatoInvalidoException {
+    public void cerrarInscripcion(Torneo torneo) throws PrimerPuntoException {
         if (torneo.getEstado() != EstadoTorneo.INSCRIPCION_ABIERTA) {
             throw new DatoInvalidoException("La inscripción de este torneo ya está cerrada.");
         }
-        torneo.setEstado(EstadoTorneo.INSCRIPCION_CERRADA);
+        cambiarEstado(torneo, EstadoTorneo.INSCRIPCION_CERRADA);
     }
 
     /** Marca el inicio del torneo, una vez generado su formato. */
-    public void iniciarTorneo(Torneo torneo) {
-        torneo.setEstado(EstadoTorneo.EN_CURSO);
+    public void iniciarTorneo(Torneo torneo) throws PersistenciaException {
+        cambiarEstado(torneo, EstadoTorneo.EN_CURSO);
+    }
+
+    /** Cambia el estado del torneo y lo guarda; si no se puede guardar, el torneo vuelve a su estado anterior. */
+    void cambiarEstado(Torneo torneo, EstadoTorneo nuevo) throws PersistenciaException {
+        EstadoTorneo anterior = torneo.getEstado();
+        torneo.setEstado(nuevo);
+        try {
+            dao.actualizarEstado(torneo);
+        } catch (PersistenciaException e) {
+            torneo.setEstado(anterior);
+            throw e;
+        }
     }
 
     /**
      * Finaliza un torneo una vez disputados todos sus partidos (CU15, RF29 y RF31).
      * Al pasar a "Finalizado", el torneo queda incluido en el historial.
      */
-    public void finalizarTorneo(Torneo torneo, boolean todosLosPartidosJugados) throws DatoInvalidoException {
+    public void finalizarTorneo(Torneo torneo, boolean todosLosPartidosJugados) throws PrimerPuntoException {
         if (torneo.getEstado() == EstadoTorneo.FINALIZADO) {
             throw new DatoInvalidoException("El torneo ya está finalizado.");
         }
@@ -126,7 +168,7 @@ public class GestionTorneos {
             throw new DatoInvalidoException(
                     "No se puede finalizar el torneo hasta que se hayan disputado todos los partidos.");
         }
-        torneo.setEstado(EstadoTorneo.FINALIZADO);
+        cambiarEstado(torneo, EstadoTorneo.FINALIZADO);
     }
 
     /**

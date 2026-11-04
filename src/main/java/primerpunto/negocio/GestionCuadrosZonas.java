@@ -3,7 +3,10 @@ package primerpunto.negocio;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import primerpunto.datos.FormatoDAO;
+import primerpunto.datos.SinPersistencia;
 import primerpunto.excepciones.DatoInvalidoException;
+import primerpunto.excepciones.PrimerPuntoException;
 import primerpunto.modelo.Cuadro;
 import primerpunto.modelo.EstadoTorneo;
 import primerpunto.modelo.FilaPosicion;
@@ -20,10 +23,22 @@ import primerpunto.modelo.Zona;
 public class GestionCuadrosZonas {
 
     private final GestionTorneos gestionTorneos;
+    private final FormatoDAO dao;
     private int proximoIdFormato = 1;
 
+    /** Sin base de datos (lo usan las pruebas automatizadas). */
     public GestionCuadrosZonas(GestionTorneos gestionTorneos) {
+        this(gestionTorneos, new FormatoDAO(new SinPersistencia()));
+    }
+
+    public GestionCuadrosZonas(GestionTorneos gestionTorneos, FormatoDAO dao) {
         this.gestionTorneos = gestionTorneos;
+        this.dao = dao;
+    }
+
+    /** Al cargar los datos de la base, la numeración sigue después del último formato guardado. */
+    void restaurar(int ultimoIdFormato) {
+        proximoIdFormato = ultimoIdFormato + 1;
     }
 
     /** Indica si la cantidad de participantes habilitados es impar (CU10, flujo alternativo 1). */
@@ -39,7 +54,7 @@ public class GestionCuadrosZonas {
      * @param sortear  si es true, el orden del resto de los participantes se sortea
      */
     public Cuadro generarCuadro(Torneo torneo, List<Participante> conBye, boolean sortear)
-            throws DatoInvalidoException {
+            throws PrimerPuntoException {
         validarQueSePuedaGenerar(torneo);
         List<Participante> participantes = torneo.getParticipantesHabilitados();
         if (participantes.size() < 2) {
@@ -60,7 +75,7 @@ public class GestionCuadrosZonas {
         orden.addAll(resto);
 
         cuadro.armarCruces(orden);
-        torneo.agregarFormato(cuadro);
+        guardarFormatos(torneo, List.of(cuadro));
         gestionTorneos.iniciarTorneo(torneo);
         return cuadro;
     }
@@ -69,7 +84,7 @@ public class GestionCuadrosZonas {
      * Genera el cuadro con el orden que armó el organizador a mano: los primeros de la
      * lista reciben los byes (si hacen falta) y el resto se enfrenta de a pares, en orden.
      */
-    public Cuadro generarCuadroManual(Torneo torneo, List<Participante> orden) throws DatoInvalidoException {
+    public Cuadro generarCuadroManual(Torneo torneo, List<Participante> orden) throws PrimerPuntoException {
         validarQueSePuedaGenerar(torneo);
         validarMismosParticipantes(torneo, orden);
         if (orden.size() < 2) {
@@ -77,13 +92,13 @@ public class GestionCuadrosZonas {
         }
         Cuadro cuadro = new Cuadro(proximoIdFormato++);
         cuadro.armarCruces(orden);
-        torneo.agregarFormato(cuadro);
+        guardarFormatos(torneo, List.of(cuadro));
         gestionTorneos.iniciarTorneo(torneo);
         return cuadro;
     }
 
     /** Genera las zonas con el reparto que hizo el organizador a mano (cada zona, con al menos tres participantes). */
-    public List<Zona> generarZonasManual(Torneo torneo, List<List<Participante>> reparto) throws DatoInvalidoException {
+    public List<Zona> generarZonasManual(Torneo torneo, List<List<Participante>> reparto) throws PrimerPuntoException {
         validarQueSePuedaGenerar(torneo);
         List<Participante> todos = new ArrayList<>();
         for (int i = 0; i < reparto.size(); i++) {
@@ -110,7 +125,7 @@ public class GestionCuadrosZonas {
      * de a uno por zona, para que las zonas queden parejas.
      * Si la cantidad no es múltiplo de las zonas, algunas quedan con un participante más.
      */
-    public List<Zona> generarZonas(Torneo torneo, int cantidadZonas, boolean sortear) throws DatoInvalidoException {
+    public List<Zona> generarZonas(Torneo torneo, int cantidadZonas, boolean sortear) throws PrimerPuntoException {
         validarQueSePuedaGenerar(torneo);
         List<Participante> participantes = new ArrayList<>(torneo.getParticipantesHabilitados());
         if (cantidadZonas < 1) {
@@ -133,16 +148,24 @@ public class GestionCuadrosZonas {
         return crearZonas(torneo, reparto);
     }
 
-    private List<Zona> crearZonas(Torneo torneo, List<List<Participante>> reparto) {
+    private List<Zona> crearZonas(Torneo torneo, List<List<Participante>> reparto) throws PrimerPuntoException {
         List<Zona> zonas = new ArrayList<>();
         for (int i = 0; i < reparto.size(); i++) {
             Zona zona = new Zona(proximoIdFormato++, i + 1);
             zona.armarCruces(reparto.get(i));
-            torneo.agregarFormato(zona);
             zonas.add(zona);
         }
+        guardarFormatos(torneo, zonas);
         gestionTorneos.iniciarTorneo(torneo);
         return zonas;
+    }
+
+    /** Guarda los formatos en la base y recién después los agrega al torneo. */
+    private void guardarFormatos(Torneo torneo, List<? extends Formato> formatos) throws PrimerPuntoException {
+        dao.insertar(torneo, formatos);
+        for (Formato formato : formatos) {
+            torneo.agregarFormato(formato);
+        }
     }
 
     /**
@@ -151,7 +174,7 @@ public class GestionCuadrosZonas {
      * Los primeros de zona reciben los byes si hacen falta, y cada primero se cruza
      * con un segundo de otra zona, para no repetir un partido ya jugado en la zona.
      */
-    public Cuadro generarCuadroDesdeZonas(Torneo torneo, int clasificadosPorZona) throws DatoInvalidoException {
+    public Cuadro generarCuadroDesdeZonas(Torneo torneo, int clasificadosPorZona) throws PrimerPuntoException {
         List<Zona> zonas = obtenerZonas(torneo);
         if (zonas.isEmpty()) {
             throw new DatoInvalidoException("El torneo no tiene zonas generadas.");
@@ -214,7 +237,7 @@ public class GestionCuadrosZonas {
         orden.addAll(segundos);
 
         cuadro.armarCruces(orden);
-        torneo.agregarFormato(cuadro);
+        guardarFormatos(torneo, List.of(cuadro));
         return cuadro;
     }
 
@@ -222,7 +245,7 @@ public class GestionCuadrosZonas {
      * Descarta el formato generado para poder elegir otro. Solo se permite mientras
      * el torneo no haya comenzado, es decir, mientras no haya ningún resultado cargado.
      */
-    public void eliminarFormato(Torneo torneo) throws DatoInvalidoException {
+    public void eliminarFormato(Torneo torneo) throws PrimerPuntoException {
         if (torneo.getFormatos().isEmpty()) {
             throw new DatoInvalidoException("El torneo todavía no tiene un formato generado.");
         }
@@ -232,8 +255,9 @@ public class GestionCuadrosZonas {
                         + "no se puede modificar.");
             }
         }
+        dao.eliminar(torneo.getFormatos());
         torneo.quitarFormatos();
-        torneo.setEstado(EstadoTorneo.INSCRIPCION_CERRADA);
+        gestionTorneos.cambiarEstado(torneo, EstadoTorneo.INSCRIPCION_CERRADA);
     }
 
     /** El cuadro del torneo, o null si todavía no se generó (CU12). */
@@ -259,6 +283,39 @@ public class GestionCuadrosZonas {
     /** Tabla de posiciones de una zona (CU14, RF27). */
     public List<FilaPosicion> obtenerTablaPosiciones(Zona zona) {
         return zona.calcularTablaPosiciones();
+    }
+
+    /**
+     * Campeón del torneo, o null si todavía no está definido:
+     * - con cuadro, quien ganó la final;
+     * - con una sola zona, el primero de la tabla, una vez jugados todos los partidos.
+     * Con varias zonas el campeón sale del cuadro final.
+     */
+    public Participante obtenerCampeon(Torneo torneo) {
+        Cuadro cuadro = obtenerCuadro(torneo);
+        if (cuadro != null) {
+            return cuadro.getCampeon();
+        }
+        List<Zona> zonas = obtenerZonas(torneo);
+        if (zonas.size() == 1 && zonas.get(0).estaCompleto()) {
+            return zonas.get(0).calcularTablaPosiciones().get(0).getParticipante();
+        }
+        return null;
+    }
+
+    /**
+     * Antes de finalizar (CU15): con varias zonas hay que jugar el cuadro final, y
+     * en todos los casos tienen que estar jugados todos los partidos.
+     */
+    public void validarFinalizacion(Torneo torneo) throws DatoInvalidoException {
+        if (obtenerZonas(torneo).size() > 1 && obtenerCuadro(torneo) == null) {
+            throw new DatoInvalidoException("El torneo tiene varias zonas: para definir al campeón hay que generar "
+                    + "y jugar el cuadro final con los clasificados.");
+        }
+        if (!todosLosPartidosJugados(torneo)) {
+            throw new DatoInvalidoException(
+                    "No se puede finalizar el torneo hasta que se hayan disputado todos los partidos.");
+        }
     }
 
     /** Verifica si ya se jugaron todos los partidos del torneo (se usa para finalizarlo). */
