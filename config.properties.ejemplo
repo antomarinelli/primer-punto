@@ -1,0 +1,6 @@
+# Datos de conexión a MySQL de Primer Punto.
+# Copiar este archivo con el nombre config.properties (en esta misma carpeta)
+# y completar el usuario y la contraseña de MySQL de la computadora.
+url=jdbc:mysql://localhost:3306/primer_punto
+usuario=root
+contrasena=
